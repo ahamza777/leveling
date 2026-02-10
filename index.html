@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Solo Leveling – IRL System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#0b2a4a,#000);
+  font-family:Arial,Helvetica,sans-serif;
+  color:#bfe9ff;
+}
+.container{max-width:420px;margin:auto;padding:15px}
+.card{
+  background:linear-gradient(180deg,#0f305a,#071a33);
+  border:1px solid #1e90ff55;
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:15px;
+}
+.system{
+  text-align:center;
+  color:#00eaff;
+  font-weight:bold;
+  margin-bottom:12px;
+  letter-spacing:1px;
+}
+.stat{display:flex;justify-content:space-between;font-size:14px;margin:4px 0}
+.progress{
+  height:10px;
+  background:#000;
+  border-radius:10px;
+  overflow:hidden;
+  margin:6px 0;
+}
+.progress span{
+  display:block;
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#00c6ff,#0072ff);
+}
+.quest{
+  background:#081c35;
+  border:1px solid #1e90ff44;
+  border-radius:10px;
+  padding:10px;
+  margin:12px 0;
+}
+.quest.done{opacity:0.5}
+.sub{
+  font-size:13px;
+  margin-left:12px;
+  margin-top:4px;
+  cursor:pointer;
+}
+.sub.done{text-decoration:line-through;opacity:0.5}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="system">🔔 SYSTEM: Daily Quests Assigned</div>
+
+<div class="card">
+<h2 style="text-align:center;margin:5px 0">Hamza</h2>
+
+<div class="stat"><span>LEVEL</span><span id="level">0</span></div>
+<div class="stat"><span>EXP</span><span id="expText">0 / 150</span></div>
+<div class="progress"><span id="expBar"></span></div>
+<div class="stat"><span>RANK</span><span id="rank">E</span></div>
+<div class="stat"><span>STREAK</span><span>🔥 <span id="streak">0</span> days</span></div>
+</div>
+
+<div class="card">
+<h3>📜 Daily Quests</h3>
+
+<div class="quest" data-exp="20">
+<b>7–8 AM Workout (+20)</b>
+<div class="sub">• Push-ups</div>
+<div class="sub">• Squats</div>
+<div class="sub">• Sit-ups</div>
+<div class="sub">• 1 min plank</div>
+</div>
+
+<div class="quest" data-exp="40">
+<b>5–8 PM Study (+40)</b>
+<div class="sub">• Notes revision</div>
+<div class="sub">• 1 topic deep study</div>
+</div>
+
+<div class="quest" data-exp="30">
+<b>9–10 PM Coding (+30)</b>
+<div class="sub">• 1 logic program</div>
+<div class="sub">• Debug old code</div>
+</div>
+
+<div class="quest" data-exp="20">
+<b>10–11 PM Reading (+20)</b>
+<div class="sub">• Read books</div>
+</div>
+
+<div class="quest" data-exp="30">
+<b>11–12 Skill Learning (+30)</b>
+<div class="sub">• New concept / tutorial</div>
+</div>
+
+<div class="quest" data-exp="10">
+<b>Sleep at 12 AM (+10)</b>
+<div class="sub">• Phone off</div>
+</div>
+
+</div>
+</div>
+
+<script>
+// ================== DATA ==================
+let data = JSON.parse(localStorage.getItem("soloLevel")) || {
+  level:0,
+  exp:0,
+  streak:0,
+  completed:[]
+};
+
+// ================== UI UPDATE ==================
+function updateUI(){
+  document.getElementById("level").innerText=data.level;
+  document.getElementById("expText").innerText=`${data.exp} / 150`;
+  document.getElementById("expBar").style.width=(data.exp/150*100)+"%";
+  document.getElementById("streak").innerText=data.streak;
+  document.getElementById("rank").innerText=data.level>=10?"D":"E";
+  localStorage.setItem("soloLevel",JSON.stringify(data));
+}
+
+// ================== QUEST LOGIC ==================
+document.querySelectorAll(".quest").forEach((quest,qIndex)=>{
+  const subs=quest.querySelectorAll(".sub");
+
+  subs.forEach((sub,sIndex)=>{
+    const key=`${qIndex}-${sIndex}`;
+    if(data.completed.includes(key)) sub.classList.add("done");
+
+    sub.onclick=()=>{
+      if(sub.classList.contains("done")) return;
+      sub.classList.add("done");
+      data.completed.push(key);
+
+      const allDone=[...subs].every(s=>s.classList.contains("done"));
+      if(allDone && !quest.classList.contains("done")){
+        quest.classList.add("done");
+        data.exp+=parseInt(quest.dataset.exp);
+
+        if(data.exp>=150){
+          data.exp-=150;
+          data.level++;
+          data.streak++;
+          alert("🔥 SYSTEM: LEVEL UP!");
+        }
+      }
+      updateUI();
+    };
+  });
+});
+
+updateUI();
+
+// ================== NOTIFICATIONS ==================
+if ("Notification" in window) {
+  Notification.requestPermission();
+}
+
+const questsNotify = [
+  { time:"07:00", title:"Workout Time", body:"Push-ups • Squats • Sit-ups • 1 min Plank" },
+  { time:"17:00", title:"Study Time", body:"Deep study session" },
+  { time:"21:00", title:"Coding Time", body:"Logic + Debug practice" },
+  { time:"22:00", title:"Reading Time", body:"Read books calmly" },
+  { time:"23:00", title:"Skill Learning", body:"New concept / tutorial" },
+  { time:"00:00", title:"Sleep Time", body:"Phone off & rest" }
+];
+
+let notifiedToday = {};
+
+function checkQuestTime(){
+  const now=new Date();
+  const currentTime=
+    now.getHours().toString().padStart(2,"0")+":"+
+    now.getMinutes().toString().padStart(2,"0");
+
+  questsNotify.forEach(q=>{
+    if(currentTime===q.time && !notifiedToday[q.time]){
+      if(Notification.permission==="granted"){
+        new Notification("🔔 SYSTEM: "+q.title,{
+          body:q.body
+        });
+      }
+      notifiedToday[q.time]=true;
+    }
+  });
+
+  if(currentTime==="01:00") notifiedToday={};
+}
+
+setInterval(checkQuestTime,30000);
+</script>
+
+</body>
+</html>
