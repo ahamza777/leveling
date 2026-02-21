@@ -3,157 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Quest PWA</title>
+<title>Monthly Alarm PWA</title>
 
 <link rel="manifest" href="manifest.json">
 
 <style>
 body{
     margin:0;
-    font-family:'Segoe UI',sans-serif;
+    font-family:Segoe UI,sans-serif;
     background:#0a0a0f;
     color:white;
     text-align:center;
 }
 .panel{
     background:#111;
-    padding:25px;
+    padding:20px;
     margin:20px auto;
     border-radius:20px;
     border:2px solid #00f0ff;
-    width:360px;
+    width:380px;
 }
-input{margin:5px;padding:8px;width:90%;border-radius:8px;border:none;background:#1a1a1a;color:white;}
-button{margin:10px;padding:10px 20px;border:none;border-radius:8px;background:#00f0ff;font-weight:bold;cursor:pointer;}
-.quest-card{border:2px solid #00f0ff;margin:8px;padding:10px;border-radius:12px;cursor:pointer;}
-.quest-card.active{background:#00f0ff;color:black;}
-.progress-bar{width:300px;height:20px;background:#222;border-radius:10px;margin:10px auto;overflow:hidden;}
-.progress-fill{height:100%;width:0%;background:#00f0ff;transition:0.5s;}
+input,select{
+    margin:6px;
+    padding:8px;
+    width:90%;
+    border-radius:8px;
+    border:none;
+    background:#1a1a1a;
+    color:white;
+}
+button{
+    margin:10px;
+    padding:10px 20px;
+    border:none;
+    border-radius:8px;
+    background:#00f0ff;
+    font-weight:bold;
+    cursor:pointer;
+}
+.alarm-card{
+    border:2px solid #00f0ff;
+    margin:8px;
+    padding:10px;
+    border-radius:12px;
+}
 </style>
 </head>
 <body>
 
 <div class="panel">
-<h2>Quest System PWA</h2>
-<input id="username" placeholder="Name">
-<div id="questInputs"></div>
-<button onclick="addQuestInput()">+ Add Quest</button>
-<button onclick="startApp()">Activate</button>
+<h2>Monthly Alarm System</h2>
+<input id="alarmName" placeholder="Alarm Name">
+<input type="time" id="alarmTime">
+<select id="alarmMonth"></select>
+<input id="alarmDays" placeholder="Enter days (e.g. 1,5,12,20)">
+<button onclick="addAlarm()">Add Alarm</button>
 </div>
 
 <div class="panel">
-<h3 id="welcome"></h3>
-<p>Level: <span id="level">0</span></p>
-<p>Total EXP: <span id="totalExp">0</span></p>
-<div class="progress-bar"><div class="progress-fill" id="expBar"></div></div>
-<div id="questList"></div>
+<h3>Your Alarms</h3>
+<div id="alarmList"></div>
 </div>
 
 <script>
 
-let quests=[],completed=[],totalExp=0,level=0,username="";
+let alarms=[];
 
 /* Register Service Worker */
 if("serviceWorker" in navigator){
     navigator.serviceWorker.register("sw.js");
 }
 
-/* Save / Load */
+/* Fill Months */
+const months=[
+"January","February","March","April","May","June",
+"July","August","September","October","November","December"
+];
+
+let monthSelect=document.getElementById("alarmMonth");
+months.forEach((m,i)=>{
+    let option=document.createElement("option");
+    option.value=i;
+    option.textContent=m;
+    monthSelect.appendChild(option);
+});
+
+/* Save/Load */
 function saveData(){
-    localStorage.setItem("questData",JSON.stringify({quests,completed,totalExp,level,username}));
+    localStorage.setItem("monthlyAlarms",JSON.stringify(alarms));
 }
 function loadData(){
-    let data=JSON.parse(localStorage.getItem("questData"));
+    let data=JSON.parse(localStorage.getItem("monthlyAlarms"));
     if(data){
-        quests=data.quests||[];
-        completed=data.completed||[];
-        totalExp=data.totalExp||0;
-        level=data.level||0;
-        username=data.username||"";
-        document.getElementById("welcome").innerText="Welcome "+username;
-        renderQuests();
+        alarms=data;
+        renderAlarms();
+        sendToSW();
     }
 }
 
-/* Add Quest */
-function addQuestInput(){
-    let div=document.createElement("div");
-    div.innerHTML=`
-        <input placeholder="Quest Name">
-        <input type="number" placeholder="EXP">
-        <input type="time">
-    `;
-    document.getElementById("questInputs").appendChild(div);
-}
+/* Add Alarm */
+function addAlarm(){
+    let name=document.getElementById("alarmName").value;
+    let time=document.getElementById("alarmTime").value;
+    let month=parseInt(document.getElementById("alarmMonth").value);
+    let days=document.getElementById("alarmDays").value;
 
-/* Start */
-function startApp(){
-    username=document.getElementById("username").value;
-    if(!username) return alert("Enter name");
+    if(!name || !time || !days){
+        alert("Fill all fields");
+        return;
+    }
 
-    let inputs=document.querySelectorAll("#questInputs div");
-    quests=[];
-    inputs.forEach(div=>{
-        let name=div.children[0].value;
-        let exp=parseInt(div.children[1].value);
-        let time=div.children[2].value;
-        if(name && exp && time){
-            quests.push({name,exp,time});
-        }
-    });
+    let dayArray=days.split(",").map(d=>parseInt(d.trim()));
 
+    alarms.push({name,time,month,days:dayArray});
     saveData();
-    document.getElementById("welcome").innerText="Welcome "+username;
-    renderQuests();
-    sendQuestsToSW();
+    renderAlarms();
+    sendToSW();
 }
 
 /* Render */
-function renderQuests(){
-    let list=document.getElementById("questList");
+function renderAlarms(){
+    let list=document.getElementById("alarmList");
     list.innerHTML="";
-    quests.forEach((q,i)=>{
-        let card=document.createElement("div");
-        card.className="quest-card";
-        if(completed.includes(i)) card.classList.add("active");
-        card.innerHTML=`${q.name} (${q.exp} EXP) - ${q.time}`;
-        card.onclick=()=>toggleQuest(i);
-        list.appendChild(card);
+    alarms.forEach((a,i)=>{
+        let div=document.createElement("div");
+        div.className="alarm-card";
+        div.innerHTML=`
+            <b>${a.name}</b><br>
+            ${months[a.month]} - Days: ${a.days.join(", ")}<br>
+            Time: ${a.time}
+        `;
+        list.appendChild(div);
     });
-    updateExp();
 }
 
-function toggleQuest(i){
-    if(completed.includes(i)){
-        completed=completed.filter(x=>x!==i);
-        totalExp-=quests[i].exp;
-    }else{
-        completed.push(i);
-        totalExp+=quests[i].exp;
-    }
-    updateExp();
-    saveData();
-}
-
-function updateExp(){
-    document.getElementById("totalExp").innerText=totalExp;
-    document.getElementById("level").innerText=level;
-    let totalPossible=quests.reduce((s,q)=>s+q.exp,0);
-    let percent=totalPossible?(totalExp/totalPossible)*100:0;
-    document.getElementById("expBar").style.width=percent+"%";
-}
-
-/* Send quest schedule to Service Worker */
-function sendQuestsToSW(){
+/* Send to Service Worker */
+function sendToSW(){
     if(navigator.serviceWorker.controller){
-        navigator.serviceWorker.controller.postMessage({quests});
+        navigator.serviceWorker.controller.postMessage({alarms});
     }
 }
 
 loadData();
-addQuestInput();
 
 </script>
 </body>
 </html>
-
