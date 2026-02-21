@@ -1,47 +1,15 @@
-self.addEventListener("install", event=>{
-    self.skipWaiting();
-});
-
-self.addEventListener("activate", event=>{
-    event.waitUntil(self.clients.claim());
-});
-
-let alarms=[];
-
-self.addEventListener("message", event=>{
-    if(event.data.alarms){
-        alarms=event.data.alarms;
-        scheduleAlarms();
+{
+  "name": "Monthly Alarm PWA",
+  "short_name": "AlarmApp",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#00f0ff",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     }
-});
-
-function scheduleAlarms(){
-    alarms.forEach(alarm=>{
-        alarm.days.forEach(day=>{
-            let [hour,minute]=alarm.time.split(":");
-
-            let now=new Date();
-            let target=new Date(
-                now.getFullYear(),
-                alarm.month,
-                day,
-                hour,
-                minute,
-                0
-            );
-
-            if(now>target){
-                target.setFullYear(now.getFullYear()+1);
-            }
-
-            let timeout=target-now;
-
-            setTimeout(()=>{
-                self.registration.showNotification("Alarm",{
-                    body:alarm.name,
-                    icon:"icon-192.png"
-                });
-            },timeout);
-        });
-    });
+  ]
 }
