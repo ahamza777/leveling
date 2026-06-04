@@ -1,151 +1,581 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monthly Alarm PWA</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<link rel="manifest" href="manifest.json">
+<title>Solo Leveling System</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
-body{
+
+*{
     margin:0;
-    font-family:Segoe UI,sans-serif;
-    background:#0a0a0f;
-    color:white;
-    text-align:center;
+    padding:0;
+    box-sizing:border-box;
 }
-.panel{
-    background:#111;
+
+body{
+    font-family:'Orbitron',sans-serif;
+    background:#020814;
+    color:white;
+    min-height:100vh;
+    overflow-x:hidden;
+    display:flex;
+    justify-content:center;
+    align-items:center;
     padding:20px;
-    margin:20px auto;
-    border-radius:20px;
-    border:2px solid #00f0ff;
-    width:380px;
 }
-input,select{
-    margin:6px;
-    padding:8px;
-    width:90%;
-    border-radius:8px;
-    border:none;
-    background:#1a1a1a;
+
+/* BACKGROUND */
+
+body::before{
+    content:"";
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:
+    radial-gradient(circle at top,#0a2b52 0%,transparent 40%),
+    radial-gradient(circle at bottom,#05111f 0%,transparent 40%);
+    z-index:-2;
+}
+
+body::after{
+    content:"";
+    position:fixed;
+    width:100%;
+    height:100%;
+    background-image:
+    linear-gradient(rgba(0,183,255,0.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,183,255,0.05) 1px,transparent 1px);
+    background-size:35px 35px;
+    z-index:-1;
+}
+
+/* MAIN PANEL */
+
+.system-panel{
+    width:100%;
+    max-width:430px;
+    min-height:760px;
+    border:1px solid rgba(120,220,255,0.3);
+    background:rgba(0,10,25,0.6);
+    backdrop-filter:blur(10px);
+    padding:25px;
+    position:relative;
+    box-shadow:
+    0 0 20px rgba(0,180,255,0.2),
+    inset 0 0 20px rgba(0,180,255,0.08);
+}
+
+/* HEADER */
+
+.header-box{
+    border:1px solid rgba(120,220,255,0.4);
+    padding:12px;
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.header-box h1{
+    color:#8fe9ff;
+    letter-spacing:4px;
+    font-size:28px;
+    text-shadow:0 0 10px #00c3ff;
+}
+
+.system-text{
+    margin-bottom:35px;
+    color:#b8dfff;
+    font-size:14px;
+    line-height:1.7;
+}
+
+/* GOAL */
+
+.goal-title{
+    text-align:center;
+    font-size:34px;
+    color:#dff9ff;
+    margin-bottom:35px;
+    text-decoration:underline;
+    text-shadow:0 0 10px #00c3ff;
+}
+
+.quest-list{
+    display:flex;
+    flex-direction:column;
+    gap:22px;
+}
+
+/* QUEST ITEM */
+
+.quest{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    padding-bottom:12px;
+}
+
+.quest-left{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.quest-name{
+    font-size:18px;
     color:white;
 }
-button{
-    margin:10px;
-    padding:10px 20px;
-    border:none;
-    border-radius:8px;
-    background:#00f0ff;
-    font-weight:bold;
+
+.quest-progress{
+    color:#8eeeff;
+    font-size:14px;
+}
+
+.quest-btn{
+    width:42px;
+    height:42px;
+    border:2px solid #00d0ff;
+    background:transparent;
+    color:#00d0ff;
+    font-size:20px;
     cursor:pointer;
+    transition:0.3s;
 }
-.alarm-card{
-    border:2px solid #00f0ff;
-    margin:8px;
+
+.quest-btn:hover{
+    background:#00d0ff;
+    color:black;
+    box-shadow:0 0 20px #00d0ff;
+}
+
+.completed{
+    background:#00ff95 !important;
+    border-color:#00ff95 !important;
+    color:black !important;
+    box-shadow:0 0 15px #00ff95;
+}
+
+/* WARNING */
+
+.warning{
+    margin-top:90px;
+    line-height:2;
+    color:#d9e8ff;
+    font-size:15px;
+}
+
+.warning span{
+    color:#ff2f5d;
+    text-shadow:0 0 10px #ff2f5d;
+}
+
+/* XP SECTION */
+
+.stats{
+    margin-top:45px;
+}
+
+.level{
+    margin-bottom:15px;
+    font-size:18px;
+    color:#9cefff;
+}
+
+.xp-bar{
+    width:100%;
+    height:18px;
+    background:#06131f;
+    border:1px solid #00d0ff;
+    overflow:hidden;
+}
+
+.xp-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#00d0ff,#006eff);
+    box-shadow:0 0 20px #00d0ff;
+    transition:0.5s;
+}
+
+.rank{
+    margin-top:15px;
+    color:#5ce1ff;
+    font-size:18px;
+}
+
+/* COMPLETE MESSAGE */
+
+.complete-message{
+    position:fixed;
+    top:40px;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,20,40,0.9);
+    border:1px solid #00d0ff;
+    padding:15px 25px;
+    color:#8fe9ff;
+    letter-spacing:2px;
+    display:none;
+    z-index:100;
+    box-shadow:0 0 20px #00d0ff;
+    animation:fade 0.5s;
+}
+
+@keyframes fade{
+    from{
+        opacity:0;
+        transform:translateX(-50%) translateY(-20px);
+    }
+    to{
+        opacity:1;
+        transform:translateX(-50%) translateY(0);
+    }
+}
+
+/* HISTORY */
+
+.history{
+    margin-top:40px;
+}
+
+.history h2{
+    color:#8fe9ff;
+    margin-bottom:15px;
+    font-size:20px;
+}
+
+.history-box{
+    max-height:160px;
+    overflow-y:auto;
+    border:1px solid rgba(120,220,255,0.2);
     padding:10px;
-    border-radius:12px;
 }
+
+.history-item{
+    margin-bottom:10px;
+    color:#cceeff;
+    font-size:13px;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    padding-bottom:8px;
+}
+
 </style>
 </head>
+
 <body>
 
-<div class="panel">
-<h2>Monthly Alarm System</h2>
-<input id="alarmName" placeholder="Alarm Name">
-<input type="time" id="alarmTime">
-<select id="alarmMonth"></select>
-<input id="alarmDays" placeholder="Enter days (e.g. 1,5,12,20)">
-<button onclick="addAlarm()">Add Alarm</button>
+<div class="complete-message" id="popup">
+QUEST COMPLETED
 </div>
 
-<div class="panel">
-<h3>Your Alarms</h3>
-<div id="alarmList"></div>
+<div class="system-panel">
+
+<div class="header-box">
+<h1>QUEST INFO</h1>
+</div>
+
+<div class="system-text">
+[Daily Quest: Strength Training has arrived.]
+</div>
+
+<div class="goal-title">
+GOAL
+</div>
+
+<div class="quest-list" id="questList">
+</div>
+
+<div class="warning">
+WARNING: Failure to complete the daily quest will result in an appropriate <span>penalty.</span>
+</div>
+
+<div class="stats">
+
+<div class="level">
+LEVEL: <span id="level">1</span>
+</div>
+
+<div class="xp-bar">
+<div class="xp-fill" id="xpFill"></div>
+</div>
+
+<div class="rank">
+RANK: <span id="rank">E</span>
+</div>
+
+</div>
+
+<div class="history">
+
+<h2>HISTORY</h2>
+
+<div class="history-box" id="historyBox">
+</div>
+
+</div>
+
 </div>
 
 <script>
 
-let alarms=[];
+const defaultQuests = [
+{
+    name:"Push-ups",
+    current:0,
+    target:100,
+    reward:25
+},
+{
+    name:"Sit-ups",
+    current:0,
+    target:100,
+    reward:25
+},
+{
+    name:"Squats",
+    current:0,
+    target:100,
+    reward:25
+},
+{
+    name:"Running",
+    current:0,
+    target:10,
+    reward:50,
+    unit:"km"
+}
+]
 
-/* Register Service Worker */
-if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("sw.js");
+let data = JSON.parse(localStorage.getItem("soloSystem"))
+
+if(!data){
+    data = {
+        xp:0,
+        level:1,
+        rank:"E",
+        quests:defaultQuests,
+        history:[],
+        lastDate:new Date().toDateString()
+    }
 }
 
-/* Fill Months */
-const months=[
-"January","February","March","April","May","June",
-"July","August","September","October","November","December"
-];
+/* DAILY RESET */
 
-let monthSelect=document.getElementById("alarmMonth");
-months.forEach((m,i)=>{
-    let option=document.createElement("option");
-    option.value=i;
-    option.textContent=m;
-    monthSelect.appendChild(option);
-});
+const today = new Date().toDateString()
 
-/* Save/Load */
+if(data.lastDate !== today){
+
+    data.history.unshift({
+        date:data.lastDate,
+        quests:data.quests
+    })
+
+    data.quests = JSON.parse(JSON.stringify(defaultQuests))
+
+    data.lastDate = today
+
+    saveData()
+}
+
+/* SAVE */
+
 function saveData(){
-    localStorage.setItem("monthlyAlarms",JSON.stringify(alarms));
+    localStorage.setItem("soloSystem",JSON.stringify(data))
 }
-function loadData(){
-    let data=JSON.parse(localStorage.getItem("monthlyAlarms"));
-    if(data){
-        alarms=data;
-        renderAlarms();
-        sendToSW();
+
+/* RANK SYSTEM */
+
+function updateRank(){
+
+    if(data.level >= 50){
+        data.rank = "S"
     }
-}
-
-/* Add Alarm */
-function addAlarm(){
-    let name=document.getElementById("alarmName").value;
-    let time=document.getElementById("alarmTime").value;
-    let month=parseInt(document.getElementById("alarmMonth").value);
-    let days=document.getElementById("alarmDays").value;
-
-    if(!name || !time || !days){
-        alert("Fill all fields");
-        return;
+    else if(data.level >= 40){
+        data.rank = "A"
+    }
+    else if(data.level >= 30){
+        data.rank = "B"
+    }
+    else if(data.level >= 20){
+        data.rank = "C"
+    }
+    else if(data.level >= 10){
+        data.rank = "D"
+    }
+    else{
+        data.rank = "E"
     }
 
-    let dayArray=days.split(",").map(d=>parseInt(d.trim()));
-
-    alarms.push({name,time,month,days:dayArray});
-    saveData();
-    renderAlarms();
-    sendToSW();
+    document.getElementById("rank").innerText = data.rank
 }
 
-/* Render */
-function renderAlarms(){
-    let list=document.getElementById("alarmList");
-    list.innerHTML="";
-    alarms.forEach((a,i)=>{
-        let div=document.createElement("div");
-        div.className="alarm-card";
-        div.innerHTML=`
-            <b>${a.name}</b><br>
-            ${months[a.month]} - Days: ${a.days.join(", ")}<br>
-            Time: ${a.time}
-        `;
-        list.appendChild(div);
-    });
-}
+/* XP SYSTEM */
 
-/* Send to Service Worker */
-function sendToSW(){
-    if(navigator.serviceWorker.controller){
-        navigator.serviceWorker.controller.postMessage({alarms});
+function addXP(amount){
+
+    data.xp += amount
+
+    while(data.xp >= 100){
+
+        data.xp -= 100
+        data.level++
+
+        popup("LEVEL UP")
     }
+
+    updateUI()
 }
 
-loadData();
+/* POPUP */
+
+function popup(text){
+
+    const pop = document.getElementById("popup")
+
+    pop.innerText = text
+    pop.style.display = "block"
+
+    setTimeout(()=>{
+        pop.style.display = "none"
+    },2000)
+}
+
+/* QUEST UI */
+
+function renderQuests(){
+
+    const questList = document.getElementById("questList")
+
+    questList.innerHTML = ""
+
+    data.quests.forEach((quest,index)=>{
+
+        const complete = quest.current >= quest.target
+
+        const unit = quest.unit || ""
+
+        questList.innerHTML += `
+        
+        <div class="quest">
+
+            <div class="quest-left">
+
+                <div class="quest-name">
+                ${quest.name}
+                </div>
+
+                <div class="quest-progress">
+                [${quest.current}/${quest.target}${unit}]
+                </div>
+
+            </div>
+
+            <button 
+            class="quest-btn ${complete ? "completed" : ""}"
+            onclick="increaseQuest(${index})">
+
+            ${complete ? "✓" : "+"}
+
+            </button>
+
+        </div>
+        
+        `
+    })
+}
+
+/* QUEST CLICK */
+
+function increaseQuest(index){
+
+    let quest = data.quests[index]
+
+    if(quest.current >= quest.target){
+        return
+    }
+
+    quest.current++
+
+    if(quest.current >= quest.target){
+
+        addXP(quest.reward)
+
+        popup("QUEST COMPLETED")
+
+        speak("Quest Completed")
+    }
+
+    saveData()
+
+    updateUI()
+}
+
+/* VOICE */
+
+function speak(text){
+
+    let speech = new SpeechSynthesisUtterance(text)
+
+    speech.volume = 1
+    speech.rate = 1
+    speech.pitch = 1
+
+    speechSynthesis.speak(speech)
+}
+
+/* HISTORY */
+
+function renderHistory(){
+
+    const historyBox = document.getElementById("historyBox")
+
+    historyBox.innerHTML = ""
+
+    if(data.history.length === 0){
+
+        historyBox.innerHTML = "No history yet."
+
+        return
+    }
+
+    data.history.forEach(day=>{
+
+        let completed = day.quests.filter(q=>q.current >= q.target).length
+
+        historyBox.innerHTML += `
+        
+        <div class="history-item">
+        ${day.date} — ${completed}/4 Quests Completed
+        </div>
+        
+        `
+    })
+}
+
+/* UPDATE */
+
+function updateUI(){
+
+    renderQuests()
+
+    document.getElementById("level").innerText = data.level
+
+    document.getElementById("xpFill").style.width = data.xp + "%"
+
+    updateRank()
+
+    renderHistory()
+
+    saveData()
+}
+
+updateUI()
 
 </script>
+
 </body>
 </html>
